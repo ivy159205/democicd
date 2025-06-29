@@ -1,13 +1,14 @@
 # Sử dụng SDK của .NET 8 để build ứng dụng
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
 # Copy project file để restore dependencies trước
-# Đường dẫn tương đối từ thư mục gốc của context build (democicd/) đến project file
-COPY WebApplication1/WebApplication1/WebApplication1.csproj ./WebApplication1/WebApplication1/WebApplication1.csproj
+# Đường dẫn tương đối từ Dockerfile đến csproj (tức là WebApplication1/WebApplication1.csproj)
+COPY WebApplication1/WebApplication1.csproj ./WebApplication1/WebApplication1.csproj
 RUN dotnet restore WebApplication1/WebApplication1/WebApplication1.csproj
 
-# Copy toàn bộ mã nguồn từ thư mục gốc của context build (democicd/) vào /src
+# Copy toàn bộ mã nguồn vào thư mục làm việc hiện tại của container
+# (tất cả các file và thư mục từ democicd/WebApplication1/ sẽ được copy)
 COPY . .
 
 # Xuất bản ứng dụng từ đường dẫn project cụ thể

@@ -1,24 +1,37 @@
 pipeline {
     agent any
 
+    // Không cần biến PROJECT_ROOT_IN_REPO nữa vì Jenkinsfile đã nằm ở đúng "gốc" của ngữ cảnh mà chúng ta muốn
     environment {
-        // APP_DIR = 'WebApplication1/WebApplication1' // Không cần nữa vì Dockerfile ở gốc và context là gốc
         DOCKER_IMAGE_NAME = 'my-dotnet-app'
     }
 
     stages {
         stage('Checkout Source') {
             steps {
-                git branch: 'main', url: 'https://github.com/ivy159205/democicd.git'
+                // Jenkinsfile này được tải từ 'WebApplication1/Jenkinsfile'
+                // Khi nó chạy, workspace của nó đã là 'C:\ProgramData\Jenkins\.jenkins\workspace\democicd\WebApplication1'
+                // Vậy nên chỉ cần git clone "chính nó"
+                // Hoặc có thể bỏ qua bước git này nếu Jenkins job đã tự clone
+                // Giữ nguyên để đảm bảo nó ở đúng branch
+                script {
+                    // Lệnh 'git' mặc định của Jenkins sẽ checkout repo vào thư mục gốc của workspace.
+                    // Nếu Jenkinsfile được cấu hình để đọc từ 'WebApplication1/Jenkinsfile',
+                    // thì thư mục hiện tại khi pipeline bắt đầu đã là 'democicd/WebApplication1'.
+                    // Do đó, chỉ cần đảm bảo mọi thứ được cập nhật.
+                    // Bạn có thể không cần stage này nếu Jenkins đã làm điều đó ở bước đầu tiên.
+                    // Tuy nhiên, để an toàn, có thể giữ lại để pull các thay đổi mới nhất vào đúng thư mục hiện tại.
+                    git branch: 'main', url: 'https://github.com/ivy159205/democicd.git'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Lệnh docker build được chạy từ thư mục gốc của workspace Jenkins
-                    // nơi Jenkinsfile và Dockerfile của bạn đang nằm.
-                    // Dấu chấm "." chỉ ra context là thư mục hiện tại (tức là democicd/)
+                    // Tại đây, thư mục hiện tại (pwd()) đã là 'C:\ProgramData\Jenkins\.jenkins\workspace\democicd\WebApplication1'
+                    // nơi Dockerfile và .csproj của bạn được nhìn thấy như ở "gốc"
+                    echo "Building Docker image from directory: ${pwd()}"
                     sh "docker build -t ${env.DOCKER_IMAGE_NAME}:latest ."
                 }
             }
