@@ -2,14 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy project file và restore dependencies
-# Đường dẫn: WebApplication1/WebApplication1.csproj từ thư mục cha của Dockerfile
-COPY WebApplication1/WebApplication1.csproj ./WebApplication1/WebApplication1.csproj
+# Copy project file để restore dependencies trước
+# Đường dẫn tương đối từ thư mục gốc của context build (democicd/) đến project file
+COPY WebApplication1/WebApplication1/WebApplication1.csproj ./WebApplication1/WebApplication1/WebApplication1.csproj
 RUN dotnet restore WebApplication1/WebApplication1/WebApplication1.csproj
 
-# Copy toàn bộ mã nguồn vào thư mục làm việc hiện tại của container
-# Context của lệnh "docker build" sẽ là thư mục cha của Dockerfile (democicd/WebApplication1)
-# Do đó, "WebApplication1" ở đây sẽ là thư mục chứa mã nguồn
+# Copy toàn bộ mã nguồn từ thư mục gốc của context build (democicd/) vào /src
 COPY . .
 
 # Xuất bản ứng dụng từ đường dẫn project cụ thể
