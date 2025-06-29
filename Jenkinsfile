@@ -1,24 +1,28 @@
 pipeline {
-    agent any // Hoặc agent { label 'your-docker-agent' } nếu bạn có agent riêng có Docker
+    agent any
 
     environment {
-        APP_DIR = 'WebApplication1/WebApplication1'
+        // Đường dẫn tương đối từ thư mục gốc của Git repo đến thư mục chứa Dockerfile và Jenkinsfile
+        PROJECT_ROOT_IN_REPO = 'WebApplication1'
         DOCKER_IMAGE_NAME = 'my-dotnet-app'
     }
 
     stages {
         stage('Checkout Source') {
             steps {
-                git branch: 'main', url: 'https://github.com/ivy159205/democicd.git' // Thay thế URL repo của bạn
+                // Jenkins sẽ checkout toàn bộ repo vào workspace của job
+                git branch: 'main', url: 'https://github.com/ivy159205/democicd.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    dir("${env.APP_DIR}") {
-                        // Build Docker image với tag là tên image và latest
-                        // Không cần số BUILD_NUMBER nếu chỉ triển khai cục bộ và luôn dùng latest
+                    // Chuyển vào thư mục chứa Dockerfile và các file dự án (tức là PROJECT_ROOT_IN_REPO)
+                    dir("${env.PROJECT_ROOT_IN_REPO}") {
+                        echo "Building Docker image from directory: ${pwd()}"
+                        // Lệnh docker build được chạy từ thư mục hiện tại (democicd/WebApplication1)
+                        // "." (context) sẽ là thư mục đó, Dockerfile cũng nằm ở đó
                         sh "docker build -t ${env.DOCKER_IMAGE_NAME}:latest ."
                     }
                 }
@@ -29,12 +33,10 @@ pipeline {
             steps {
                 script {
                     echo "Stopping and removing existing container (if any)..."
-                    // Dừng và xóa container hiện có nếu nó đang chạy
                     sh "docker stop ${env.DOCKER_IMAGE_NAME} || true"
                     sh "docker rm ${env.DOCKER_IMAGE_NAME} || true"
 
                     echo "Running new Docker container on localhost:82..."
-                    // Chạy container mới, ánh xạ cổng 80 của container sang cổng 82 của host
                     sh "docker run -d --name ${env.DOCKER_IMAGE_NAME} -p 82:80 ${env.DOCKER_IMAGE_NAME}:latest"
 
                     echo "Application should now be accessible at http://localhost:82"
