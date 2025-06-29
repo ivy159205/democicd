@@ -45,7 +45,7 @@ pipeline {
                     sh "docker rm ${env.DOCKER_IMAGE_NAME} || true"
 
                     echo "Running new Docker container on localhost:82..."
-                    sh "docker run -d --name ${env.DOCKER_IMAGE_NAME} -p 82:80 ${env.DOCKER_IMAGE_NAME}:latest"
+                    sh "docker run -d --name ${env.DOCKER_IMAGE_NAME} -p 82:8080 ${env.DOCKER_IMAGE_NAME}:latest"
 
                     echo "Application should now be accessible at http://localhost:82"
                 }
